@@ -1,0 +1,197 @@
+# Project: Try Django
+
+### From Tutorial 10
+
+1. Products App: We customize the fields and add a new one.  
+2. Open python shell in root folder. At this point, all of the project django stuff will work inside of a python interpreter. 
+
+3. Now we can do these types of import: 
+	from products.models import Product 
+	Product.objects.all()
+
+You can add a Product by Product.objects.create(title = "", description ="", ..., featured = True)
+Then, all the products will be added to your admin. 
+
+Note that blank has to do with how the field is rendered and null has to do with the DB. If blank = False, then the field is
+required. 
+-----------------------------------------
+### Default Homepage to Custom Homepage
+-----------------------------------------
+We create a class or function based view. View will basically handle our request, our handles our various webpages.  
+1. In pages/views.py create a function home_view which returns some HTML. 
+2. Add HttpResponse to import. 
+3. Run Server but before that you have to make sure in source page of urls.py we add home_view. Import home_view. 
+
+-----------------------------------------
+### URL Routing and Requests
+-----------------------------------------
+We have to route a path to that view from urls.py in the root folder. For the followoing code for example.
+	urlpatterns = [
+		path('', home_view, name = 'home'),
+		path('contact/',contact_view),
+		path('admin/', admin.site.urls),
+	]
+In this case, when the url contains nothing, we get to home_view defined inside pages/views.py.  
+Add another url of contact
+1. Add contact url in the urls.py
+2. Make contact_view in views.py. 
+If we choose contact, then we get the contact view.
+
+What django does is, finds a matching url and then looks for the view that is made to handle the url. We go to a url requesting
+something from the url. In this case we are requesating a webpage which is at that url. 
+
+On these views, we have args and kwargs that capture everything. Let us print args and kwargs in the views page for blank url.
+When you refressh this page, in the cmd console you will get an empty list and dictionary. Adding request.user will also return gupta.
+When you will refressh the webpage, you will see WSGI request. 
+
+-----------------------------------------
+### Django Templating Engine 
+-----------------------------------------
+
+Go to pages/views.py and to home_view define:
+	return render( request, "home.html",{})
+
+Here home.html is your template and last one is context which is an empty dictionary right now. We have to create home.html. 
+
+Create a new folder in root directory (i.e. src) called Templates and create a file here called home.html. 
+You will get template does not exist. This is because djandgo does not know where the teamplate is. 
+Therefore, go to settings.py and add in DIRS location of the template folder just created. 
+
+You could hardcode it but better will be following:
+	os.path.join(BASE_DIR, "templates")
+This makes it os independent. Thus, it will work when you send the code to someone else also. 
+Before moving on, change the HttpResponse for all the views to .html. Then create the contact.html and about.html and you will
+be able to access those pages. 
+
+-----------------------------------------
+### Django Templating Engine Basics
+-----------------------------------------
+In order to avoid repetitiveness, we can do inheritance with django templates. Lets say there is shared information in all of the html 
+pages we built. We create base.html and want all the other pages to be able to communicate with base.html. 
+
+	{%block content %}
+	replace me 
+	{% endblock %}
+
+This block will be added to other pages. Whatever is placs inside the block of other pages, will be shown along with the base.html. 
+
+
+-----------------------------------------
+### Include Templage Tag
+-----------------------------------------
+
+Lets say you want a navbar being shown in multiple places. Create navbar.html.  Then go to base.thml and add 
+	{% include 'navbar.html' %}
+Thats how we include an external template.  
+
+
+-----------------------------------------
+### Rendering Context in a Template
+-----------------------------------------
+We would like to pass context to our template. Context => could be any data type
+Open pages/views and add context to about_view. Then, in about.html we must add context variable.
+
+	{{ my_text }}, {{ my_number }} 
+
+In order to render out a list, we can use a for loop. We can go into the template and run a for loop on any given context object. 
+
+We can do it as follows. 
+
+<ul>
+{% for sub_item in my_list %}
+	<li>{{ sub_item }} </li>
+{% endfor %}
+</ul>
+
+Additionally, you can add {{ forloop.counter }} before sub_item. 
+
+-----------------------------------------
+### Conditions inside a template 
+-----------------------------------------
+
+We have have if conditions like so. 
+{% for sub_item in my_list %}
+	{% if my_sub_item == 312 %}}
+		<li>{{ forloop.counter }} - {{ my_sub_item|add:22 }} </li>
+	{% elif my_sub_item == 'Abc' %}
+		<li>
+	{% else %} 
+		<li>{{ forloop.counter }} - {{ my_sub_item}} </li>
+	{% endif %}
+{% endfor %} 
+
+-----------------------------------------
+### Render Data From the DB with a Model
+-----------------------------------------
+Go to Product/views.py and create a product view. Now we need to add product/detail.html for which we first create a product
+folder under templates. 
+
+def product_detail_view(request):
+	obj = Product.objects.get(id=1)
+	context = {
+		'title': obj.title,
+		'description': obh.description
+	}
+	return render(request, "product/detail.html", context)
+
+Create detail.html like so 
+	{% extends 'base.html' %}
+
+	{% block content %}
+	<h1>{{ title }} </h1>
+	<p>{{ description }}</p>
+	{% endblock %}
+
+We change the product_detail_view 
+ 
+def product_detail_view(request):
+	obj = Product.objects.get(id=1)
+	context = {
+		'object': obj
+	}
+	return render(request, "product/detail.html", context)
+
+Edit detail.html like so 
+	{% extends 'base.html' %}
+
+	{% block content %}
+	<h1>{{ object.title }} </h1>
+	<p>{{ object.description }}</p>
+	{% endblock %}
+	
+-----------------------------------------
+### How Django Templates Load with Apps
+-----------------------------------------
+
+Create a folder templates>products and file product_detail.html. 
+
+
+-----------------------------------------
+### Django Model Forms
+-----------------------------------------
+Create a forms.py inside the Product app and create a class ProductForm. Now we want to render this out in a view. In the view, we 
+create product_detail_view and then create product_create.html inside templates>product. 
+
+In product_create.html we createe a form html element. After adding in urls.py you will be able to prompt the user to enter the values. 
+
+-----------------------------------------
+### Raw HTML form
+----------------------------------------- 
+
+Instead of using django related elements, we will create raw HTML stuff. Go to product_create.html and edit the code. After that inside
+product/views.py you change the function product_create_view. 
+This is the raw html inside product_create.html. 
+	{% extends 'base.html' %}
+
+	{% block content %}
+	<form action = 'http://www.google.com/search' method = 'GET'>
+		<input type = "text" name = 'q' placeholder = "Your search"/>
+		<input type = 'submit' value = 'Save'/>
+	</form>
+
+	{% endblock %}
+
+
+
+
+
